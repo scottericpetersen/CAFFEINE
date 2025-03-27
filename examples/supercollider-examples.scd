@@ -1,11 +1,12 @@
+
+
 // -- 1 -- Simple 1:1 mapping - x = frequency, y = amplitude
 
-// The simplest synth
 
-// 1.
+// 1. The Simplest Synth
 SynthDef(\sine, {|freq=200, amp=1| Out.ar(0, SinOsc.ar(freq, 0, amp))}).add;
 
-// 2.
+// 2. Instantiae synth and register oscdef to map x to freq and y to amp
 (
 
 x = Synth.new(\sine);
@@ -25,13 +26,10 @@ OSCdef(\pod1, {|msg, time, addr, recvPort|
 
 // -- 2 -- Register a simple enveloped sine instrument
 
+(
 SynthDef(\plinky, {|freq=400| Out.ar(21, SinOsc.ar(freq).clip * Env.perc(0.01, 2.2, 0.06).kr(2)) }).add;
-
 SynthDef(\verb, {|freq=400| Out.ar(0, FreeVerb.ar(In.ar(21,1), 0.99, 0.99)) }).add;
-Synth.new(\verb);
-
-Synth.new(\plinky);
-
+)
 
 // Use the x-axis + some logic to walk up and down the chromatic scale
 // This abstracts time = only crossing a threshold results in a sonic event

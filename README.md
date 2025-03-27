@@ -1,5 +1,5 @@
 # CAFFEINE
-Collaorative Affordable Framework For Experiments In Networked Electronics
+Collaborative Affordable Framework For Experiments In Networked Electronics
 
 [README IN PROGRESS]
 
