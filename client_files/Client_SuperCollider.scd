@@ -22,12 +22,15 @@ Incoming message sensor order:
 ----------------------------------------------------------------*/
 // -- Variables to store pods you wish to receive data from. Can have multiple. Select any pod you are using.
 (
+// Here we have only one pod. If you have more, duplicate this line and create a variable associated with it.
 ~pod_name = "/pod1";
-~pod_name2 = "/pod2";
+// On the OMI network, this is a static IP - set to the IP of the computer running your broker.
 ~broker_ip = "192.168.1.2";
-//~broker_ip = "10.66.213.19"; // not working currently - enter manually
-~client_ip = "hostname -i".unixCmdGetStdOut; // Linux
+// This line is for Linux. For Mac, comment this line and uncomment the line below
+~client_ip = "hostname -i".unixCmdGetStdOut;
+// ~client_ip = "hostname -I".unixCmdGetStdOut;
 ~client_ip.postln;
+// Determine the active language port for your computer
 ~client_port = NetAddr.langPort;
 )
 
@@ -152,12 +155,13 @@ After following the calibration steps, press meta+. (period) to stop the OSCdef.
 
 /* -- Scaling/Mapping Data
 
-It is almost always necessary to scale incoming data to useful ranges. Here, we provide a model for
-abstracting that mapping out of local code by writing all of the data as it comes in to
-control buses. Those buses can then be used to substitute for musical parameters in any Synth.
+It is almost always necessary to scale incoming data to useful ranges.
+Here, we provide a model for abstracting that mapping out of local code
+by writing all of the data as it comes in to control buses. Those buses
+can then be used to substitute for musical parameters in any Synth.
 
-This example requires the "calibration" section above has been run first to establish low and
-high values for all incoming data.
+This example requires the "calibration" section above has been run first
+to establish low and high values for all incoming data.
 
 */
 
@@ -231,12 +235,9 @@ high values for all incoming data.
 
 )
 
+// When done, you can free the OSCdef
+OSCdef(\mapper).disable;
 
-
-x = OSCdef('test', {|msg| msg.postln; }, "/test").permanent_(true);
-n = NetAddr("localhost", NetAddr.langPort);
-n.sendMsg("/test", "PRINT ME!"); // send a test message to confirm the OSCdef survives cmd+.
-OSCdef(\test).disable; // disable the permanent OSCdef
 
 /*----------------------------------------------------------------
  -- 3 -- SONIFICATION DEMO
@@ -252,14 +253,17 @@ light values will play semitones between these two pitches.
 
 */
 
-// Register a simple enveloped sine instrument
+// -- 1. Register a simple enveloped sine instrument
 SynthDef(\plinky, {|freq=400| Out.ar(21, SinOsc.ar(freq).clip * Env.perc(0.01, 2.2, 0.06).kr(2)) }).add;
-Synth(\plinky)
 
+// -- 2. Register a simple reverb synth
 SynthDef(\verb, {|freq=400| Out.ar(0, FreeVerb.ar(In.ar(21,1), 0.99, 0.99)) }).add;
+
+// -- 3. Instantiate the reverb synth
 Synth.new(\verb);
 
-// Use incoming light data to change pitches where lowest light = C4 and highest light = C5
+// -- 4. Use incoming light data to change pitches where lowest light = C4 and highest light = C5
+
 (
 OSCdef(\pod1, {|msg, time, addr, recvPort|
 	var light = msg[4].linlin(~sl, ~sh, 0, 110).nearestInScale([-12,0,7,12,16,19,21,23,25]);
@@ -268,6 +272,17 @@ OSCdef(\pod1, {|msg, time, addr, recvPort|
 }, ~pod_name);
 )
 
+
+
+
+
+
+
+
+
+
+
+/* IN PROGRESS -
 
 // -- 2.1 -- Simple Sonification Demo for multiple pods with a single data point each
 
@@ -288,3 +303,4 @@ OSCdef(\pod2, {|msg, time, addr, recvPort|
 	Synth(\plinky, [\freq, light.midicps]);
 }, ~pod_name2);
 )
+*/
