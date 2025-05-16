@@ -1,0 +1,4 @@
+Pod,Min Latency,Max Latency,Avg Latency
+Pod 1,22.79,78.79,26.12
+Pod 2,16.91,83.09,19.47
+Pod 3,16.33,80.08,19.69
