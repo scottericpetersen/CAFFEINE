@@ -1,7 +1,7 @@
 # CAFFEINE
 **Collaborative Affordable Framework For Experiments In Networked Electronics**
 
-![alt text](https://github.com/scottericpetersen/CAFFEINE/blob/main/prototype_50.png?raw=true)
+![alt text](https://github.com/scottericpetersen/CAFFEINE/blob/main/prototype_100.png?raw=true)
 
 This repository contains files pertaining to the CAFFEINE project, an ongoing research project undertaken by the Open Music Initiative at Yale University. 
 
