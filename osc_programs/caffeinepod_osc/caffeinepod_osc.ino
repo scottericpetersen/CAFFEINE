@@ -4,13 +4,144 @@
  *  1. Each pod will use this code (Arduino). You must edit the String podname line to indicate a different pod name fomatted as "/pod1", "/pod2", etc
  *  2. The broker.py code (Python3) is running on a computer whose IP is entered below in the udpAddress line and that must contain the /pod(s) entered here.
  *  3. The client.scd code is running (SuperCollider) correctly (see the setup in the client.scd document) 
- *
+ *  
+ *  Version 1.4
+
+ *  Wish list:
+ *  - Low-pass filter all sensors to remove jitter? Or better in client/broker?
+ *  - Optimize sound sensor code
+ *  - 
  */
 #include <Wire.h>
 #include <MPU6050_light.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <ArduinoOSCWiFi.h>
+
+// ---- Rounding helper (2 decimals, preserves -1 sentinel) ----
+static inline float round2f_keep(float v) {
+  if (v == -1.0f) return v;
+  float scaled = v * 100.0f;
+  scaled += (scaled >= 0.0f) ? 0.5f : -0.5f;  // true rounding
+  long i = (long)scaled;
+  return (float)i / 100.0f;
+}
+// ---- end rounding helper ----
+
+
+// ===== HC-SR04: Non-blocking interrupt-based timing (self-contained) =====
+#ifndef HCSR04_ISR_BLOCK
+#define HCSR04_ISR_BLOCK
+
+// Tunables
+static const uint32_t HCSR04_PING_INTERVAL_MS = 75;     // safe cadence for HC-SR04
+static const uint32_t HCSR04_ECHO_TIMEOUT_US  = 30000;  // cap wait (~5 m RTD)
+
+// Private copies of your pins (set at runtime in setupHCSR04)
+static int _hcsr04_trig_pin = -1;
+static int _hcsr04_echo_pin = -1;
+
+// Shared ISR state
+volatile uint32_t _hcsr04_rise_us = 0;
+volatile uint32_t _hcsr04_fall_us = 0;
+volatile bool     _hcsr04_pulse_done = false;
+
+// Main-loop state
+static bool     _hcsr04_ping_inflight = false;
+static uint32_t _hcsr04_ping_start_us = 0;
+static uint32_t _hcsr04_last_ping_ms  = 0;
+
+// Latest computed distance (cm), -1.0 on timeout/no-echo
+static volatile float _hcsr04_last_cm = -1.0f;
+
+// ISR: timestamps rising and falling edges on the echo pin
+#if defined(ESP32)
+void IRAM_ATTR _hcsr04_echo_isr() {
+#else
+void _hcsr04_echo_isr() {
+#endif
+  // NOTE: reading the pin here is unnecessary; we get edge via CHANGE
+  uint32_t t = micros();
+  if (digitalRead(_hcsr04_echo_pin)) {
+    _hcsr04_rise_us = t;
+    _hcsr04_pulse_done = false;
+  } else {
+    _hcsr04_fall_us = t;
+    _hcsr04_pulse_done = true;
+  }
+}
+
+// Trigger a 10 µs pulse on the configured TRIG pin
+static inline void _hcsr04_trigger_ping() {
+  digitalWrite(_hcsr04_trig_pin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(_hcsr04_trig_pin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(_hcsr04_trig_pin, LOW);
+}
+
+// Call this once from your setup(), passing your existing pin variables
+static inline void setupHCSR04(int trig, int echo) {
+  _hcsr04_trig_pin = trig;
+  _hcsr04_echo_pin = echo;
+
+  pinMode(_hcsr04_trig_pin, OUTPUT);
+  pinMode(_hcsr04_echo_pin, INPUT);
+  digitalWrite(_hcsr04_trig_pin, LOW);
+
+  attachInterrupt(digitalPinToInterrupt(_hcsr04_echo_pin), _hcsr04_echo_isr, CHANGE);
+}
+
+// Call this each loop iteration (fast, non-blocking)
+static inline void serviceHCSR04() {
+  const uint32_t now_ms = millis();
+  const uint32_t now_us = micros();
+
+  // Start a new ping if due and none in flight
+  if (!_hcsr04_ping_inflight && (now_ms - _hcsr04_last_ping_ms >= HCSR04_PING_INTERVAL_MS)) {
+    _hcsr04_pulse_done = false;
+    _hcsr04_rise_us = 0;
+    _hcsr04_fall_us = 0;
+
+    _hcsr04_trigger_ping();
+    _hcsr04_ping_start_us = now_us;
+    _hcsr04_last_ping_ms = now_ms;
+    _hcsr04_ping_inflight = true;
+  }
+
+  if (_hcsr04_ping_inflight) {
+    if (_hcsr04_pulse_done) {
+      uint32_t rise, fall;
+      noInterrupts();
+      rise = _hcsr04_rise_us;
+      fall = _hcsr04_fall_us;
+      interrupts();
+
+      if (fall >= rise) {
+        const unsigned long dur = fall - rise; // µs
+        _hcsr04_last_cm = (dur == 0) ? -1.0f : (dur / 58.0f);
+      } else {
+        _hcsr04_last_cm = -1.0f;
+      }
+      _hcsr04_ping_inflight = false;
+    } else if ((uint32_t)(now_us - _hcsr04_ping_start_us) > HCSR04_ECHO_TIMEOUT_US) {
+      _hcsr04_last_cm = -1.0f;  // timeout/no-echo
+      _hcsr04_ping_inflight = false;
+    }
+  }
+}
+
+// Thread-safe accessor for the latest distance (cm). Returns -1.0 if invalid.
+static inline float hcsr04_get_latest_cm() {
+  noInterrupts();
+  float v = _hcsr04_last_cm;
+  interrupts();
+  return v;
+}
+
+#endif // HCSR04_ISR_BLOCK
+// ===== END HC-SR04 interrupt block =====
+
 
 // -- VARIABLES --
 MPU6050 mpu(Wire);
@@ -50,6 +181,9 @@ const int udpPort = 5001;               // double check the port too :)
 boolean connected = false;
 
 void setup() {
+   // Initialize HC-SR04 using your already-defined pins
+  setupHCSR04(trig_pin, echo_pin);
+
   // Initialize the Wire object and set the input pins - adjust if changing pinout on the ESP32
   Wire.setPins(4, 5);
   Wire.begin();
@@ -134,14 +268,15 @@ void writeUDP(int time) {
   float s_y = mpu.getAngleY();
   float s_z = mpu.getAngleZ();
 
-  // -- HC-SR04 -- Rangefinder code
-  digitalWrite(trig_pin, LOW);               //
-  delayMicroseconds(2);                      // Pauses the program for the amount of time (in microseconds) specified by the parameter
-  digitalWrite(trig_pin, HIGH);              //Write a HIGH or a LOW value to a digital pin. In this case sets pin 2 to 5V
-  delayMicroseconds(10);                     // Wait 10 microseconds
-  digitalWrite(trig_pin, LOW);               // Set pin 2 to 0V.
-  s_range = pulseIn(echo_pin, HIGH) / 58.0;  // waits for the pin to go from LOW to HIGH, starts timing, then waits for the pin to go LOW and stops timing. Returns the length of the pulse in microseconds
-  s_range = (int(s_range * 100.0)) / 100.0;  // Keep two decimal places
+// -- BEGIN HC-SR04 -- Rangefinder code (non-blocking via interrupt)
+serviceHCSR04();  // advance the ultrasonic state machine; never blocks
+
+// Read the latest value and store it in your existing s_range variable
+float _cm = hcsr04_get_latest_cm();  // cm, or -1.0 if timeout/no-echo
+s_range = _cm;
+
+// Keep two decimal places (only for valid readings)
+// -- END HC-SR04
 
   // -- Seeed Grove -- Sound Sensor code
   long s_sound = 0;
@@ -151,6 +286,14 @@ void writeUDP(int time) {
   s_sound >>= 5;
 
   // -- Send data via OSC message
-  OscWiFi.send(udpAddress, udpPort, pod_name, s_x, s_y, s_z, s_sound, s_range, s_light);
+  // ---- Round values just before send ----
+float s_x2 = round2f_keep(s_x);
+float s_y2 = round2f_keep(s_y);
+float s_z2 = round2f_keep(s_z);
+float s_r2 = round2f_keep(s_range);
+long  s_sound2 = s_sound;   // keep integer as-is
+int   s_light2 = s_light;   // keep integer as-is
+// ---- end rounding ----
+OscWiFi.send(udpAddress, udpPort, pod_name, s_x2, s_y2, s_z2, s_sound2, s_r2, s_light2);
 
 }
