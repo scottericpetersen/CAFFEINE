@@ -36,7 +36,7 @@ def osc_sensor_data_handler(address, *args):
     print(f"Received OSC data from {pod_name}: {pretty_data}")
 
     if pod_name in pod_clients:
-        broadcast_to_clients(pod_name, sensor_data)
+        broadcast_to_clients(pod_name, pretty_data)
     else:
         print(f"Unknown pod name: {pod_name}")
 
