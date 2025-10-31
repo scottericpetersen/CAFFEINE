@@ -2,7 +2,7 @@
 
 Current to-do
 
--Schedule meeting with CAD/Print team
+- Enclosure battery notches (last on enclosure wishlist)
 
 1. Broker
 
@@ -17,3 +17,11 @@ Current to-do
 3. Pod
   - Software algorithms
 
+
+
+
+DONE: 
+
+- Schedule meeting with CAD/Print team
+- Initial Print
+- Print V2

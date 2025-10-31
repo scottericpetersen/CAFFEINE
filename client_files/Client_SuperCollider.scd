@@ -1,10 +1,11 @@
 /* CAFFEINE SuperCollider Client Example Code
 
-*----------------------
+*----------------------------
 Author: Scott Eric Petersen
 Copyright: 2025 SEP
 License: GPL3
-*----------------------
+Version: 1.1
+*----------------------------
 
 This document contains client code for use with the CAFFEINE framework. Specifically, this code details how to register to receive data from a pod via the Python broker. Please see the github readme for complete instructions.
 
