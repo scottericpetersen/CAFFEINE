@@ -259,8 +259,14 @@ void WiFiEvent(WiFiEvent_t event) {
 
 void writeUDP(int time) {
 
-  // -- Photoresistor -- light sensor code
-  int s_light = analogRead(light_pin);  // Photoresistor Sensor Input: PIN 15
+  // -- Photoresistor Sensor Input: PIN 15
+  long s_light = 0;
+  for (int i = 0; i < 32; i++) {
+    s_light += analogRead(light_pin);
+  }
+  s_light >>= 5;   // divide by 32
+
+  // int s_light = analogRead(light_pin);
 
   // -- MPU-6050 -- Gyroscope code
   mpu.update();
@@ -291,9 +297,8 @@ float s_x2 = round2f_keep(s_x);
 float s_y2 = round2f_keep(s_y);
 float s_z2 = round2f_keep(s_z);
 float s_r2 = round2f_keep(s_range);
-long  s_sound2 = s_sound;   // keep integer as-is
-int   s_light2 = s_light;   // keep integer as-is
 // ---- end rounding ----
-OscWiFi.send(udpAddress, udpPort, pod_name, s_x2, s_y2, s_z2, s_sound2, s_r2, s_light2);
+
+OscWiFi.send(udpAddress, udpPort, pod_name, s_x2, s_y2, s_z2, s_sound, s_r2, s_light);
 
 }
