@@ -36,8 +36,8 @@ pod_name = "/pod1";   // change if needed
 
 titles = ["Pitch","Roll","Yaw","Sound","Distance","Light"];
 yranges = [
-    [-80, 80],      // 0: Roll
-    [-80, 80],      // 1: Pitch
+    [-80, 80],      // 0: Pitch
+    [-80, 80],      // 1: Roll
     [-360, 360],    // 2: Yaw (wrapped)
     [150, 2500],    // 3: Sound
     [0, 190],       // 4: Distance
@@ -135,7 +135,7 @@ OSCdef(\caffeinepod, { |msg, time, from, recvPort|
         dist  = msg[5];   // 4
         light = msg[6];   // 5
 
-        // push to fixed indices
+		// push to fixed indices
         push_at.(0, pitch);
         push_at.(1, roll);
         push_at.(2, yaw);

@@ -19,7 +19,7 @@ Incoming message sensor order:
 */
 
 /*----------------------------------------------------------------
- -- 1 -- REGISTER CLIENT WITH BROKER
+ -- 1.1 -- CREATE VARIABLES
 ----------------------------------------------------------------*/
 // -- Variables to store pods you wish to receive data from. Can have multiple. Select any pod you are using.
 (
@@ -28,26 +28,65 @@ Incoming message sensor order:
 // On the OMI network, this is a static IP - set to the IP of the computer running your broker.
 ~broker_ip = "192.168.1.2";
 // This line is for Linux. For Mac, comment this line and uncomment the line below
-~client_ip = "hostname -i".unixCmdGetStdOut;
-// ~client_ip = "hostname -I".unixCmdGetStdOut;
-~client_ip.postln;
+~client_ip = NetAddr.localIP;
 // Determine the active language port for your computer
 ~client_port = NetAddr.langPort;
+
+"
+==================== VARIABLES ====================\n
+======= BROKER IP =" + ~broker_ip + "\n
+======= CLIENT IP =" + ~client_ip + "\n
+===================================================\n
+".postln;
 )
 
+/*----------------------------------------------------------------
+ -- 1.2 -- REGISTER CLIENT WITH BROKER
+----------------------------------------------------------------*/
 
 // -- The IP and port of the machine running the python broker.py program. Must use same port, here 9001
 n = NetAddr(~broker_ip, 9001);
 
-// -- Register with the broker. Enter your (ie the client) IP, the  and port. SC uses 57120 by default, but this shouldn't be counted on.
-n.sendMsg('/register', ~pod_name, "192.168.1.2", ~client_port);
+// -- An OSCdef to print messages from the broker
+(
+p = OSCdef(\broker, {|msg, time, addr, recvPort| msg.postln }, "/broker");
+p.permanent = true;
+)
 
-// -- A Simple OSCdef to print sensor data received along with time stamp, address of the broker, etc.
+// -- Register with the broker. A confirmation messages should appear in the post window
+n.sendMsg('/register', ~client_port);
+
+/*----------------------------------------------------------------
+ -- 1.3 -- LIST AVAILABLE PODS
+----------------------------------------------------------------*/
+
+// -- Request a list of available (active) pods on the network.
+n.sendMsg('/list');
+
+/*----------------------------------------------------------------
+ -- 1.4 -- REQUEST DATA FROM AVAILABLE PODS
+----------------------------------------------------------------*/
+
+// -- 1 --  A Simple OSCdef to print sensor data received along with time stamp, address of the broker, etc.
 (
 OSCdef(\pod1, {|msg, time, addr, recvPort| msg.postln }, ~pod_name);
 )
 
-// -- This example shows how to print the data types of incoming sensor data
+//  -- 2 -- Connect to the desired pod
+n.sendMsg('/connect', ~pod_name);
+
+
+/*----------------------------------------------------------------
+ -- 1.5 -- DISCONNECT FROM A POD
+----------------------------------------------------------------*/
+
+n.sendMsg('/disconnect', ~pod_name);
+
+/*----------------------------------------------------------------
+ -- 1.6 -- PRINTING AND VISUALIZING DATA
+----------------------------------------------------------------*/
+
+// -- 1 -- This example shows how to print the data types of incoming sensor data
 (
 var int = 0;
 OSCdef(\pod1, {|msg, time, addr, recvPort|
@@ -58,14 +97,13 @@ OSCdef(\pod1, {|msg, time, addr, recvPort|
 	, ~pod_name);
 )
 
-
-// -- This example writes the data from the light sensor to an array.
+// -- 2 -- This example writes the data from the light sensor to an array.
 (
 f = Array.new(48000);
-OSCdef(\pod1, {|msg, time, addr, recvPort| f = f.add(msg[4]); msg[4].postln; }, ~pod_name);
+OSCdef(\pod1, {|msg, time, addr, recvPort| f = f.add(msg[3]); msg[3].postln; }, ~pod_name);
 )
 
-// -- Evaluate this line *some time* after running the above to see a plot of the incoming data
+// -- 3 -- Evaluate this line *some time* after running the above to see a plot of the incoming data
 f.plot;
 
 
