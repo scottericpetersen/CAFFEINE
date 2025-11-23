@@ -23,8 +23,6 @@ Incoming message sensor order:
 ----------------------------------------------------------------*/
 // -- Variables to store pods you wish to receive data from. Can have multiple. Select any pod you are using.
 (
-// Here we have only one pod. If you have more, duplicate this line and create a variable associated with it.
-~pod_name = "/pod1";
 // On the OMI network, this is a static IP - set to the IP of the computer running your broker.
 ~broker_ip = "192.168.1.2";
 // This line is for Linux. For Mac, comment this line and uncomment the line below
@@ -49,7 +47,10 @@ n = NetAddr(~broker_ip, 9001);
 
 // -- An OSCdef to print messages from the broker
 (
-p = OSCdef(\broker, {|msg, time, addr, recvPort| msg.postln }, "/broker");
+p = OSCdef(\broker, {|msg, time, addr, recvPort|
+	msg.postln;
+	~last_message = msg;
+}, "/broker");
 p.permanent = true;
 )
 
@@ -60,8 +61,14 @@ n.sendMsg('/register', ~client_port);
  -- 1.3 -- LIST AVAILABLE PODS
 ----------------------------------------------------------------*/
 
-// -- Request a list of available (active) pods on the network.
+// -- 1 -- Request a list of available (active) pods on the network.
 n.sendMsg('/list');
+
+// -- 2 -- the \broker OSCdef's last message is available as ~last_message. So
+// running the above will mean that, if a pod exists on the network, you can
+// get it at the 3rd index of the message (0,1,2...
+
+~pod_name = ~last_message[2]
 
 /*----------------------------------------------------------------
  -- 1.4 -- REQUEST DATA FROM AVAILABLE PODS
@@ -100,15 +107,20 @@ OSCdef(\pod1, {|msg, time, addr, recvPort|
 // -- 2 -- This example writes the data from the light sensor to an array.
 (
 f = Array.new(48000);
-OSCdef(\pod1, {|msg, time, addr, recvPort| f = f.add(msg[3]); msg[3].postln; }, ~pod_name);
+OSCdef(\pod1, {|msg, time, addr, recvPort| f = f.add(msg[2]); msg[2].postln; }, ~pod_name);
 )
 
-// -- 3 -- Evaluate this line *some time* after running the above to see a plot of the incoming data
+// -- 3 -- Evaluate this line *some time* after running --2-- above to see a plot of the incoming data
 f.plot;
+
+// -- 4 -- When done with this, free the OSCdef
+
+OSCdef(\pod1, {nil}, ~pod_name);
 
 
 /*----------------------------------------------------------------
  -- 2 -- CALIBRATION
+------------------------------------------------------------------
 
 Here we calibrate our program for the incoming data. Specifically,
 we need to know the ranges for each data point.
@@ -192,7 +204,9 @@ After following the calibration steps, press meta+. (period) to stop the OSCdef.
 */
 
 
-/* -- Scaling/Mapping Data
+/* ---------------------------------------------------------------
+  -- 3 --  SCALING/MAPPING DATA
+------------------------------------------------------------------
 
 It is almost always necessary to scale incoming data to useful ranges.
 Here, we provide a model for abstracting that mapping out of local code
@@ -279,10 +293,10 @@ OSCdef(\mapper).disable;
 
 
 /*----------------------------------------------------------------
- -- 3 -- SONIFICATION DEMO
-----------------------------------------------------------------*/
+ -- 4 -- SONIFICATION DEMO
+------------------------------------------------------------------
 
-/* -- Simple Sonification Demo for pods sending multiple streams of data
+Simple Sonification Demo for pods sending multiple streams of data
 
 **IMPORTANT** Please perform the calibration step above to assign correct low and high values for the incoming data.
 
