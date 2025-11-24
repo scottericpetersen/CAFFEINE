@@ -20,6 +20,74 @@ Version: 1.0
 
 
 */
+/*----------------------------------------------------------------
+ -- 1.1 -- CREATE VARIABLES
+----------------------------------------------------------------*/
+// -- Variables to store pods you wish to receive data from. Can have multiple. Select any pod you are using.
+(
+// On the OMI network, this is a static IP - set to the IP of the computer running your broker.
+~broker_ip = "192.168.1.2";
+// This line is for Linux. For Mac, comment this line and uncomment the line below
+~client_ip = NetAddr.localIP;
+// Determine the active language port for your computer
+~client_port = NetAddr.langPort;
+
+"
+==================== VARIABLES ====================\n
+======= BROKER IP =" + ~broker_ip + "\n
+======= CLIENT IP =" + ~client_ip + "\n
+===================================================\n
+".postln;
+)
+
+/*----------------------------------------------------------------
+ -- 1.2 -- REGISTER CLIENT WITH BROKER
+----------------------------------------------------------------*/
+
+// -- The IP and port of the machine running the python broker.py program. Must use same port, here 9001
+n = NetAddr(~broker_ip, 9001);
+
+// -- An OSCdef to print messages from the broker
+(
+p = OSCdef(\broker, {|msg, time, addr, recvPort|
+	msg.postln;
+	~last_message = msg;
+}, "/broker");
+p.permanent = true;
+)
+
+// -- Register with the broker. A confirmation messages should appear in the post window
+n.sendMsg('/register', ~client_port);
+
+/*----------------------------------------------------------------
+ -- 1.3 -- LIST AVAILABLE PODS
+----------------------------------------------------------------*/
+
+// -- 1 -- Request a list of available (active) pods on the network.
+n.sendMsg('/list');
+
+// -- 2 -- the \broker OSCdef's last message is available as ~last_message. So
+// running the above will mean that, if a pod exists on the network, you can
+// get it at the 3rd index of the message (0,1,2...
+
+~pod_name = ~last_message[2]
+
+/*----------------------------------------------------------------
+ -- 1.4 -- REQUEST DATA FROM AVAILABLE PODS
+----------------------------------------------------------------*/
+
+// -- 1 --  A Simple OSCdef to print sensor data received along with time stamp, address of the broker, etc.
+(
+OSCdef(\pod1, {|msg, time, addr, recvPort| msg.postln }, ~pod_name);
+)
+
+//  -- 2 -- Connect to the desired pod
+n.sendMsg('/connect', ~pod_name);
+
+
+/*----------------------------------------------------------------
+ -- 2.0 -- CREATE THE VISUALIZER
+----------------------------------------------------------------*/
 
 (
 var broker_ip, broker_port, pod_name;
