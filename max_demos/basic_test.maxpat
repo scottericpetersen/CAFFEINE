@@ -9,7 +9,7 @@
             "modernui": 1
         },
         "classnamespace": "box",
-        "rect": [ 1243.0, 267.0, 1353.0, 840.0 ],
+        "rect": [ 81.0, 264.0, 1353.0, 840.0 ],
         "openinpresentation": 1,
         "boxes": [
             {
@@ -19,7 +19,7 @@
                     "maxclass": "comment",
                     "numinlets": 1,
                     "numoutlets": 0,
-                    "patching_rect": [ 1174.0, 614.0, 150.0, 47.0 ],
+                    "patching_rect": [ 1174.0, 614.0, 152.0, 47.0 ],
                     "text": "Receive data from desired udp port and print it to the console"
                 }
             },
@@ -133,7 +133,7 @@
                     "patching_rect": [ 194.0, 801.0, 150.0, 60.0 ],
                     "presentation": 1,
                     "presentation_linecount": 5,
-                    "presentation_rect": [ 562.0, 867.0, 132.0, 74.0 ],
+                    "presentation_rect": [ 562.0, 867.0, 134.0, 74.0 ],
                     "text": "Change what pod to DISCONNECT from by editing the box above (file must be UNLOCKED)",
                     "textcolor": [ 0.0, 0.0, 0.0, 1.0 ]
                 }
@@ -192,7 +192,7 @@
                     "patching_rect": [ 179.0, 786.0, 150.0, 47.0 ],
                     "presentation": 1,
                     "presentation_linecount": 3,
-                    "presentation_rect": [ 400.0, 884.0, 132.0, 47.0 ],
+                    "presentation_rect": [ 400.0, 884.0, 133.0, 47.0 ],
                     "text": "Click this button to connect to the pod (file must be LOCKED)",
                     "textcolor": [ 0.0, 0.0, 0.0, 1.0 ]
                 }
@@ -280,7 +280,7 @@
                     "patching_rect": [ 164.0, 771.0, 150.0, 47.0 ],
                     "presentation": 1,
                     "presentation_linecount": 4,
-                    "presentation_rect": [ 96.0, 882.0, 127.0, 60.0 ],
+                    "presentation_rect": [ 96.0, 882.0, 128.0, 60.0 ],
                     "text": "Click this button to list all active pods in the console (file must be LOCKED)",
                     "textcolor": [ 0.0, 0.0, 0.0, 1.0 ]
                 }
@@ -440,7 +440,7 @@
                     "patching_rect": [ 179.0, 786.0, 150.0, 60.0 ],
                     "presentation": 1,
                     "presentation_linecount": 4,
-                    "presentation_rect": [ 689.0, 340.0, 132.75, 60.0 ],
+                    "presentation_rect": [ 689.0, 340.0, 132.5, 60.0 ],
                     "text": "Broker's OSC port (must match BROKER_OSC_PORT in broker_osc.py)",
                     "textcolor": [ 0.0, 0.0, 0.0, 1.0 ]
                 }
@@ -498,7 +498,7 @@
                     "patching_rect": [ 164.0, 771.0, 150.0, 33.0 ],
                     "presentation": 1,
                     "presentation_linecount": 2,
-                    "presentation_rect": [ 398.0, 347.0, 132.0, 33.0 ],
+                    "presentation_rect": [ 398.0, 347.0, 136.0, 33.0 ],
                     "text": "IP address of computer running the broker",
                     "textcolor": [ 0.0, 0.0, 0.0, 1.0 ]
                 }
@@ -530,7 +530,7 @@
                     "patching_rect": [ 149.0, 756.0, 150.0, 47.0 ],
                     "presentation": 1,
                     "presentation_linecount": 3,
-                    "presentation_rect": [ 109.0, 340.0, 130.75, 47.0 ],
+                    "presentation_rect": [ 109.0, 340.0, 132.0, 47.0 ],
                     "text": "Port that will listen to broker (7400 is a good default for max)",
                     "textcolor": [ 0.0, 0.0, 0.0, 1.0 ]
                 }
@@ -702,7 +702,7 @@
                     "maxclass": "comment",
                     "numinlets": 1,
                     "numoutlets": 0,
-                    "patching_rect": [ 1119.0, 56.0, 150.0, 33.0 ],
+                    "patching_rect": [ 1119.0, 56.0, 152.0, 33.0 ],
                     "text": "Disconnect this client from a specific pod"
                 }
             },
