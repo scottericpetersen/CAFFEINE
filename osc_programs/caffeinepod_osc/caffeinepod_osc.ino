@@ -167,12 +167,12 @@ const long del = 10;  // every 10 milliseconds, send values
 const char* pod_name = "/pod1";
 
 // WiFi network name and password. For a network that does not require a password, leave an empty string.
-const char* networkName = "OMINET2G";  // ESP32 Devkits cannot connect to 5G wireless... must use 2 GHz
-const char* networkPswd = "YalOmi$123!";
+const char* networkName = "lakelikaanocean";  // ESP32 Devkits cannot connect to 5G wireless... must use 2 GHz
+const char* networkPswd = "lookatthatview";
 
 
 // -- [EDIT 2] IP address to send UDP data to: either use the ip address of the server or a network broadcast address
-const char* udpAddress = "192.168.1.2";  // double check the IP address of the machine running the Python broker
+const char* udpAddress = "192.168.1.117";  // double check the IP address of the machine running the Python broker
 const int udpPort = 5001;               // double check the port too :)
 
 // -- END SETUP --
