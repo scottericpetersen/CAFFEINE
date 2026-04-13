@@ -167,7 +167,7 @@ const long del = 10;  // every 10 milliseconds, send values
 const char* pod_name = "/pod1";
 
 // WiFi network name and password. For a network that does not require a password, leave an empty string.
-const char* networkName = "lakelikaanocean";  // ESP32 Devkits cannot connect to 5G wireless... must use 2 GHz
+const char* networkName = "lakelikeanocean";  // ESP32 Devkits cannot connect to 5G wireless... must use 2 GHz
 const char* networkPswd = "lookatthatview";
 
 
