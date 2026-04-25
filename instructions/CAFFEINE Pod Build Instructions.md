@@ -11,8 +11,9 @@ This document will show how to put together a CAFFEINE pod. These are the parts 
 - Sound Sensor
 - Photoresistor
 - HC-SR04 Distance Sensor
+- LiPo Rider Plus
+- Battery
 - Resistor (how many ohms?)
-- Capacitor
 - Jumper wires (15 male-to-male, 6 female-to-male?)
 
 ## Build Instructions
@@ -45,11 +46,16 @@ Like the sound sensor, we need to make sure the male headers on the distance sen
 
 ![distance_sensor](./images/distance_sensor.JPG)
 
-Now, we can putting things together.
+**LiPo Rider Plus**
+
+You will need to solder female headers to the through holes in the LiPo rider plus. When done, it should look like this:
+![LiPo rider](./images/lipo_rider.png)
+
+Now, we can start putting things together.
 
 ### Step 1: Place the distance sensor in the enclosure
 
-You need to poke the distance sensor through the holes in the enclosure. Make sure to place the sound sensor so that the male headers are facing up. After completing this step, the pod should look like this:
+You need to poke the distance sensor through the holes in the enclosure. Make sure to place the sound sensor so that the male headers are closer to the open top of the enclosure. After completing this step, the pod should look like this:
 
 ![IMG_0950](./images/IMG_0950.JPG)
 
@@ -88,18 +94,44 @@ Here is how the pod should look after this step is completed:
 
 SDA should connect to pin 5 on the ESP32, and SCL should connect to pin 4:
 
-![image-20260412191207495](./images/circuit_image-5.png)
+![image-20260412191207495](./images/circuit_image-4.png)
 
 **Next, connect the sound sensor**
 
-Connect the VCC pin on the sound sensor to the power rail, connect the GND pin to the ground rail, and connect the OUT pin to the ESP32
+Connect the VCC pin on the sound sensor to the power rail, connect the GND pin to the ground rail, and connect the OUT pin to the ESP32:
+
+![](./images/circuit_image-5.png)
 
 Where to connect the OUT pin should match the `sound_pin` variable in `caffeinepod_osc.ino`. By default, the `sound_pin` variable is set to 18, so (unless you changed the value in `caffeinepod_osc.ino`) connect the OUT pin on the sound sensor to pin 18 on the ESP32
 
-**Finally, connect the distance sensor**
+**Next, connect the distance sensor**
 
 Connect the VCC pin to the power rail and the GND pin to the power rail. The echo and trig pins should connect to the pins on the ESP32 indicated by the `echo_pin` and `trig_pin` variables, respectively. By default, `echo_pin` is 6 and `trig_pin` is 7.
 
 ![image-20260412213341718](./images/circuit_image-6.png)
 
-You can also add a capacitor here [pick it up from here. YOu also need to add parts for the LDR and for the battery]
+### Step 6: The lid
+
+The battery, LiPo rider, and photoresistor go on the lid of the CAFFEINE pod, and they connect to the rest of the components through jumper cables. It may be easiest to first place the components on the lid and then wire everything together.
+
+You should put the photoresistor through the hole in the lid and use some adhesive (like hot glue or tape) to keep it in place. Likewise, use some adhesive to keep the battery and LiPo rider in place. You can really use anything to keep these components in place, as long as they hold on. For example, the image below uses screws to keep the LiPo rider attached to the lid.
+
+![Photo of lid](./images/lid.png)
+
+### Step 7: Wiring the lid components
+
+Once the components are on the lid, you can wire them.
+
+First, connect the photoresistor to the breadboard so the ESP32 can read light measurements. Here is an example schematic of the CAFFEINE pod with the photoresistor wired on:
+
+![CAFFINE pod with LDR](./images/circuit_image-7.png)
+
+As you can see, one lead of the photoresistor connects to the power rail on the breadboard. The other lead connects to row 24 of the breadboard (or any row with 3 free spaces). Then, a resistor connects from another free space on row 24 to the GND rail on the breadboard. Finally, a jumper wire connects from the final free space on row 24 to the input pin designated by `light_pin` in `caffeinepod_osc.ino` (which is pin 15 by default).
+
+Next, connect the JST connector on the battery to the LiPo rider, as seen in the photo in step 6.
+
+Finally, use jumper wires to connect the GND output of the LiPo rider to the ground (blue) rail on the breadboard. Likewise, connect the 5V output of the LiPo rider to the power (red) rail on the breadboard.
+
+### Step 8: Make noise!
+
+By this point, the CAFFEINE pod hardware is ready to go. From here, fire up the broker and a client file and make some noise!
